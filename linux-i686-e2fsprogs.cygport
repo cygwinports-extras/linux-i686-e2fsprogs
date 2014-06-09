@@ -1,0 +1,55 @@
+CROSS_HOST="i686-pc-linux-gnu"
+inherit cross
+
+NAME="linux-i686-e2fsprogs"
+VERSION=1.42.10
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="libcom_err/libss for Linux i686 toolchain"
+DESCRIPTION="This package contains all of the standard utilities for creating,
+fixing, configuring, and debugging ext2/3/4 filesystems."
+HOMEPAGE="http://e2fsprogs.sourceforge.net/"
+SRC_URI="mirror://sourceforge/e2fsprogs/e2fsprogs-${VERSION}.tar.gz"
+SRC_DIR="e2fsprogs-${VERSION}"
+PATCH_URI="1.42.10-cross-subst.patch"
+
+PKG_NAMES="linux-i686-libcom_err linux-i686-libss"
+linux_i686_libcom_err_SUMMARY="Common error library for Linux i686 toolchain"
+linux_i686_libcom_err_DOCS="COPYING RELEASE-NOTES"
+linux_i686_libcom_err_CONTENTS="
+	${CROSS_BINDIR#/}/compile_et
+	${CROSS_INCLUDEDIR#/}/com_err.h
+	${CROSS_INCLUDEDIR#/}/et/
+	${CROSS_LIBDIR#/}/libcom_err.*
+	${CROSS_LIBDIR#/}/pkgconfig/com_err.pc
+	${CROSS_DATADIR#/}/et/
+"
+linux_i686_libss_SUMMARY="Subsystem library for Linux i686 toolchain"
+linux_i686_libss_DOCS="COPYING RELEASE-NOTES"
+linux_i686_libss_CONTENTS="
+	${CROSS_BINDIR#/}/mk_cmds
+	${CROSS_INCLUDEDIR#/}/ss/
+	${CROSS_LIBDIR#/}/libss.*
+	${CROSS_LIBDIR#/}/pkgconfig/ss.pc
+	${CROSS_DATADIR#/}/ss/
+"
+
+RESTRICT=postinst-doc
+
+src_compile() {
+	cd ${S}
+	cygautoreconf
+	cd ${B}
+	cygconf --enable-elf-shlibs --disable-bsd-shlibs \
+		--disable-profile --disable-checker --disable-e2initrd-helper \
+		--disable-{jbd,blkid,testio}-debug --disable-uuidd
+	cygmake -C lib/et
+	cygmake -C lib/ss
+}
+
+src_install() {
+	cd ${B}
+	cyginstall -j1 -C lib/et INCMODE=644 LIBMODE=644
+	cyginstall -j1 -C lib/ss INCMODE=644 LIBMODE=644
+	rm -fr ${D}${CROSS_DATADIR}/man/
+}
